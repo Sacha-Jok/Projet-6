@@ -33,8 +33,8 @@ exports.login = (req, res, next) => {
                         userId: user._id,
                         token: jwt.sign(
                             { userId: user._id },
-                            `bZ}u.%k*uB'O$Y9]]"<WvjoN?[TPD=`,
-                            { expiresIn: '24h' }
+                            process.env.TOKEN_SECRET_ALEATOIRE,
+                            { expiresIn: process.env.TOKEN_TEMP }
                         )
                     });
                 })
