@@ -34,7 +34,25 @@ exports.createSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-
+    const SaucesObject = req.file ? {
+        ...JSON.parse(req.body.sauce),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    } : { ...req.body };
+  
+    delete SaucesObject._userId;
+    Sauces.findOne({_id: req.params.id})
+        .then((sauces) => {
+            if (sauces.userId != req.auth.userId) {
+                res.status(401).json({ message : 'Not authorized'});
+            } else {
+                Sauces.updateOne({ _id: req.params.id}, { ...SaucesObject, _id: req.params.id})
+                .then(() => res.status(200).json({message : 'Sauce modifiée!'}))
+                .catch(error => res.status(401).json({ error }));
+            }
+        })
+        .catch((error) => {
+            res.status(400).json({ error });
+        });
 };
 
 exports.deleteSauce = (req, res, next) => {
