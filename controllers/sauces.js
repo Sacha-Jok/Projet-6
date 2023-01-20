@@ -1,4 +1,5 @@
-const Sauces = require('../models/Sauces')
+const Sauces = require('../models/Sauces');
+const fs = require('fs');
 
 exports.getAllSauces = (req, res, next) => {
     Sauces.find()
@@ -6,32 +7,51 @@ exports.getAllSauces = (req, res, next) => {
         .catch(error => res.status(400).json({error}));
 };
 
-exports.getOneSauces = (req, res, next) => {
+exports.getOneSauce = (req, res, next) => {
     Sauces.findOne({_id: req.params.id})
         .then(sauces => res.status(200).json(sauces))
         .catch(error => res.status(400).json({error}));
 };
 
-exports.createSauces = (req, res, next) => {
+exports.createSauce = (req, res, next) => {
     const SaucesObject = JSON.parse(req.body.sauce)
-    delete SaucesObject._id;
+    const init = {
+        likes: 0,
+        dislikes: 0,
+        usersLiked: [],
+        usersDisliked: [],
+    };
     delete SaucesObject._userId;
     const sauce = new Sauces({
         ...SaucesObject,
         userId: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+        ...init,
     });
     sauce.save()
     .then(() => { res.status(201).json({message: 'Sauce ajoutée !'})})
     .catch(error => { res.status(400).json( { error })})
 };
 
-exports.modifySauces = (req, res, next) => {
+exports.modifySauce = (req, res, next) => {
 
 };
 
-exports.deleteSauces = (req, res, next) => {
-
+exports.deleteSauce = (req, res, next) => {
+    Sauces.findOne({_id: req.params.id})
+    .then(sauces => {
+        if (sauces.userId != req.auth.userId) {
+            res.status(401).json({ message: "Unauthorized"});
+        } else {
+            const filename = sauces.imageUrl.split('/images/')[1];
+                fs.unlink(`images/${filename}`, () => {
+                    Sauces.deleteOne({_id: req.params.id})
+                    .then(() => { res.status(201).json({message: 'Sauce supprimée !'})})
+                    .catch(error => { res.status(400).json( { error })})
+                });
+        }      
+    })
+    .catch(error => res.status(400).json({error}));
 };
 
 exports.addLike = (req, res, next) => {
