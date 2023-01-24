@@ -1,0 +1,15 @@
+# Piiquante #
+
+### Env-template ###
+
+```
+#GENERAL
+PORT="XXXXXXXXXX"
+
+#MONGODB
+MONGO_URI='XXXXXXXXXX'
+
+#JWT
+JWT_SECRET="XXXXXXXXXX"
+JWT_TEMP="XXXXXXXXXX"
+```
