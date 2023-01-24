@@ -72,6 +72,48 @@ exports.deleteSauce = (req, res, next) => {
     .catch(error => res.status(400).json({error}));
 };
 
-exports.addLike = (req, res, next) => {
-
+exports.likeSauce = (req, res, next) => {
+    Sauces.findOne({_id: req.params.id})
+    .then(sauces => {
+        let vote;
+        let user = req.body.userId;
+        let like = sauces.usersLiked.includes(user);
+        let dislike = sauces.usersDisliked.includes(user);
+        if (like === true) {
+            vote = 1;
+        } else if (dislike === true) {
+            vote = -1
+        } else {
+            vote = 0;
+        }
+        if (vote === 0 && req.body.like === 1) {
+            sauces.likes += 1;
+            sauces.usersLiked.push(user);
+        } else if (vote === 1 && req.body.like === 0) {
+            sauces.likes -= 1;
+            const newUsersLiked = sauces.usersLiked.filter(item => item !== user);
+            sauces.usersLiked = newUsersLiked
+        } else if (vote === -1 && req.body.like === 0) {
+            sauces.dislikes -= 1;
+            const newUsersDisliked = sauces.usersDisliked.filter(item => item !== user);
+            sauces.usersDisliked = newUsersDisliked
+        } else if (vote === 0 && req.body.like === -1) {
+            sauces.dislikes += 1;
+            sauces.usersDisliked.push(user);
+        } else {
+            console.log("Like interdit")
+        }
+        Sauces.updateOne(
+            {_id: req.params.id},
+            {
+                likes: sauces.likes,
+                dislikes: sauces.dislikes,
+                usersLiked: sauces.usersLiked,
+                usersDisliked: sauces.usersDisliked,
+            }
+        )
+        .then(() => { res.status(201).json({message: 'Vote pris en compte !'})})
+        .catch(error => { res.status(400).json( { error })})
+    })
+    .catch((error) => res.status(404).json({ error }));
 };
